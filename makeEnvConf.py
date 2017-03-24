@@ -21,7 +21,7 @@ Using this information, check the system status when run thee sysCheckMain.py
 '''
 # Variable
 NETWORK_FS_TYPE = ('nfs', 'cifs', 'smb', 'samba')
-
+JSON_FILE_NAME = 'envCheckSys.json'
 
 '''
     "DBMS_NAME": "kind of DBMS like oracle, ppas, mysql, sap hana and etc",
@@ -42,8 +42,12 @@ NETWORK_FS_TYPE = ('nfs', 'cifs', 'smb', 'samba')
     "SCRIPT_PATH": "this script's path",
     "SERIAL_NUMBER": "Hardware Serial Number"
 '''
+
 # System Basic Information
 Total_Info = platform.uname()
+# Total_Info
+# ('Linux', 'kodiss-VirtualBox', '4.8.0-41-generic', '#44~16.04.1-Ubuntu SMP Fri Mar 3 17:11:16 UTC 2017', 'x86_64', 'x86_64')
+
 SystemInfo={}
 SystemInfo['HOST_NAME'] = Total_Info[1]
 SystemInfo['KERNEL_VERSION'] = Total_Info[2]
@@ -65,10 +69,10 @@ for line in MountInfo:
 
 SystemInfo['NETWORK_FS_COUNT'] = NetworkFSCount
 
+SystemInfo['HA_MODE'] = 'Need to Update(serviceguard, powerha, steeleye, etc, none)'
 
 # DBMS Information
-#DBInfo = commands.getstatusoutput('ps -ef | grep -i -e pmon -e hdbindexserver -e postgre -e mysql -e mssql| grep -v grep')
-DBInfo = commands.getstatusoutput('ps -ef | grep -i service')
+DBInfo = commands.getstatusoutput('ps -ef | grep -i -e pmon -e hdbindexserver -e postgre -e mysql -e mssql| grep -v grep')
 
 if DBInfo[0] is 256:
     SystemInfo['DBMS_NAME'] = 'none'
@@ -94,14 +98,13 @@ else:
         elif line[8].find('mariadb'):
             SystemInfo['DBMS_NAME'] = 'mariadb'
             DBCount = DBCount + 1
-        SystemInfo['HA_MODE'] = 'Need to Update(serviceguard, powerha, steeleye, etc, none)'
         SystemInfo['DB_SID'] = 'Need to Update DB SID'
+        SystemInfo['DB_HOME'] = 'Need to update(Path or none)'
+        SystemInfo['DB_LOG'] = 'Need to update(Path or none)'
 
 if SystemInfo['DBMS_NAME'] is 'oracle':
     ListenerInfo = commands.getoutput('ps -ef | grep -i tns | grep -v grep')
     SystemInfo['LSNR_COUNT'] = len(ListenerInfo.split('\n'))
-    SystemInfo['ORACLE_HOME'] = 'Need to update(Path or none)'
-    SystemInfo['ORACLE_LOG'] = 'Need to update(Path or none)'
 
 SerialNumber = commands.getoutput('dmidecode -s system-serial-number')
 if SerialNumber is 0:
@@ -116,9 +119,12 @@ pathname = os.path.dirname(sys.argv[0])
 SystemInfo['SCRIPT_PATH'] = os.path.abspath(pathname)
 
 fileTime = datetime.now().strftime('%Y%m%d_%H%M%S')
-if (os.path.isfile('envCheckSys.conf')):
-    os.rename('envCheckSys.conf','envCheckSys.conf.'+fileTime)
+if (os.path.isfile(JSON_FILE_NAME)):
+    os.rename(JSON_FILE_NAME, JSON_FILE_NAME +'.' + fileTime)
 
-with open('envCheckSys.conf','w') as outfile:
+with open(JSON_FILE_NAME,'w') as outfile:
     json.dump(SystemInfo, outfile, sort_keys=True, indent=4)
+outfile.close()
+
+
 
