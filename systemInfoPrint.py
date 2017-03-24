@@ -2,6 +2,7 @@ import sys, os, commands
 import psutil, platform
 import json
 import datetime
+from colorama import init, Fore, Back, Style
 
 '''
 ==================================================================================
@@ -23,6 +24,11 @@ Print Current System infomation
 '''
 # Variable
 JSON_FILE_NAME = 'envCheckSys.json'
+CPU_WARNING_THRESHOLD = 80
+CPU_CRITICAL_THRESHOLD = 90
+MEM_WARNING_THRESHOLD = 80
+MEM_CRITICAL_THRESHOLD = 90
+CPU_AVG_THRESHOLD = (psutil.cpu_count() * 1.3)
 
 
 def string_left_sort(str, totalSize, enterOrNot=1):
@@ -57,135 +63,147 @@ def print_systemInfo():
     print now_time
 
     # System detailed Information
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
 
-    string_left_sort("Hostname :",15,0)
-    string_center_sort(SystemInfo['HOST_NAME'],20,0)
-    string_center_sort('|',1,0)
-    print " ",
 
-    string_left_sort("H/W :",10,0)
-    string_center_sort(SystemInfo['MACHINE_VENDOR'] + " / " + SystemInfo['MACHINE_NAME'],25,0)
-    string_center_sort('|', 1, 0)
-    print " ",
+    print "Hostname :".ljust(15),
+    print SystemInfo['HOST_NAME'].center(20),
+    print '|'.center(2),
 
-    string_left_sort("Serial :",15,0)
-    string_center_sort(SystemInfo['SERIAL_NUMBER'],20,0)
-    string_center_sort('|', 1, 0)
-    print " ",
+    print "H/W :".ljust(10),
+    print (SystemInfo['MACHINE_VENDOR'] + " / " + SystemInfo['MACHINE_NAME']).center(25),
+    print '|'.center(2),
+
+    print "Serial :".ljust(15),
+    print SystemInfo['SERIAL_NUMBER'].center(20),
+    print '|'.center(2)
+
+    print '|'.center(1),
+
+    print "CPU(Logi/Physi/Core) :".ljust(15),
+    print (str(psutil.cpu_count()) + ' / ' + str(psutil.cpu_count(logical=False)) + ' / ' + cpuSpeed).center(53),
+    print '|'.center(2),
+
+    print "Physical MEM :".ljust(15),
+    print (str(round(psutil.virtual_memory().total/1024/1024/1024)) +' GB').center(20),
+    print '|'.center(2),
     print
 
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
 
-    string_left_sort("CPU(Logi/Physi/Core):",20,0)
-    string_center_sort(str(psutil.cpu_count())+' / '+str(psutil.cpu_count(logical=False)) + ' / ' + cpuSpeed,55,0)
-    string_center_sort('|',1,0)
-    print " ",
+    print "OS VER :".ljust(15),
+    print SystemInfo['OS_VERSION'].center(20),
+    print '|'.center(2),
 
-    string_left_sort("Physical MEM :",15,0)
-    string_center_sort(str(round(psutil.virtual_memory().total/1024/1024/1024)) +' GB',20,0)
-    string_center_sort('|', 1, 0)
-    print " ",
-    print
+    print "Kernel :".ljust(15),
+    print SystemInfo['KERNEL_VERSION'].center(20),
+    print '|'.center(2),
 
-    string_center_sort('|', 1, 0)
-
-
-    string_left_sort("OS VER :",15,0)
-    string_center_sort(SystemInfo['OS_VERSION'],20,0)
-    string_center_sort('|', 1, 0)
-    print " ",
-
-    string_left_sort("Kernel :",15,0)
-    string_center_sort(SystemInfo['KERNEL_VERSION'],20,0)
-    string_center_sort('|', 1, 0)
-    print " ",
-
-    string_left_sort("HA MODE :",15,0)
-    string_center_sort(SystemInfo['HA_MODE'],20,0)
-    string_center_sort('|', 1, 0)
-    print " ",
-    print
+    print "HA MODE :".ljust(15),
+    print SystemInfo['HA_MODE'].center(20),
+    print '|'.center(2)
 
 
     if SystemInfo['DBMS_NAME'] is not 'none':
         print "  DBMS Information  ".center(122,'-')
-        string_center_sort('|', 1, 0)
 
-        string_left_sort("DBMS :", 10, 0)
-        string_center_sort(SystemInfo['DBMS_NAME'], 25, 0)
-        string_center_sort('|', 1, 0)
-        print " ",
+        print '|'.center(1),
+        print "DBMS :".ljust(10),
+        print SystemInfo['DBMS_NAME'].center(25),
+        print '|'.center(2),
 
-        string_left_sort("DB SID :", 10, 0)
-        string_center_sort(SystemInfo['DB_SID'], 25, 0)
-        string_center_sort('|', 1, 0)
-        print " ",
+        print "DB SID :".ljust(10),
+        print SystemInfo['DB_SID'].center(25),
+        print '|'.center(2),
 
-        string_left_sort("DB Mode :", 10, 0)
-        string_center_sort(SystemInfo['DB_MODE'], 25, 0)
-        string_center_sort('|', 1, 0)
-        print " ",
+        print "DB Mode :".ljust(10),
+        print SystemInfo['DB_MODE'].center(25),
+        print '|'.center(2),
         print
 
     # First row
     print "  Resource Information  ".center(122, '-')
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
     print " CPU ".center(27,'-'),
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
     print " ",
     print " MEM ".center(27, '-'),
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
     print " ",
     print " SWAP ".center(27, '-'),
-    string_center_sort('|', 1, 0)
+    print '|'.center(1),
     print " ",
     print " ? ".center(22, '-'),
-    string_center_sort('|', 1, 0)
-    print " ",
-    print
+    print '|'.center(1),
+    print " "
 
     # Third Row
-    string_center_sort('|', 1, 0)
-    string_left_sort("CPU Avg(/5Min)",15,0)
-    string_right_sort(cpuAvg,10,0)
-    string_center_sort('|', 4, 0)
+    print '|'.center(1),
+    if float(cpuAvg) > CPU_AVG_THRESHOLD:
+        print (Back.RED + Fore.WHITE + "CPU Avg(/5Min)".ljust(15)),
+        print (cpuAvg.rjust(10)),
+        print(Back.RESET + Fore.RESET),
+    else:
+        print "CPU Avg(/5Min)".ljust(15),
+        print cpuAvg.rjust(11),
+    print '|'.center(2),
 
-    string_left_sort("Used (GB)",15,0)
-    Used_MEM = str(round(psutil.virtual_memory().used/1024/1024/1024))
-    string_right_sort(Used_MEM,10,0)
-    string_center_sort('|', 4, 0)
+    print "Used (GB)".ljust(15),
+    print Used_MEM.rjust(12),
+    print '|'.center(2),
 
-    string_left_sort("Used/Total (GB)",15,0)
-    Used_SWAP = str(round(psutil.swap_memory().used/1024/1024/1024))
-    Total_SWAP = str(round(psutil.swap_memory().total / 1024 / 1024 / 1024))
-    string_right_sort(Used_SWAP + ' / ' + Total_SWAP,10,0)
-    string_center_sort('|', 4, 0)
-
-    print
+    print "Used/Total (GB)".ljust(15),
+    print (Used_SWAP + ' / ' + Total_SWAP).rjust(12),
+    print '|'.center(2)
 
     # Fourth Row
-    string_center_sort('|', 1, 0)
-    string_left_sort("Usage (%)", 15, 0)
-    UsedP_CPU = str(round(psutil.cpu_percent()))
-    string_right_sort( UsedP_CPU + '%', 10, 0)
-    string_center_sort('|', 4, 0)
 
-    string_left_sort("Usage (%)",15,0)
-    UsedP_MEM = str(round(psutil.virtual_memory().percent)) + '%'
-    string_right_sort(UsedP_MEM,10,0)
-    string_center_sort('|', 4, 0)
+    print '|'.center(1),
+    if UsedP_CPU > CPU_WARNING_THRESHOLD:
+        print(Back.RED + Fore.WHITE  + "Usage (%)".ljust(15)),
+        print((str(UsedP_CPU) + ' %').rjust(10)),
+        print(Back.RESET + Fore.RESET),
+    elif UsedP_CPU > CPU_WARNING_THRESHOLD:
+        print(Back.YELLOW + Fore.WHITE + "Usage (%)".ljust(15)),
+        print((str(UsedP_CPU) + ' %').rjust(11)),
+        print(Back.RESET + Fore.RESET),
+    else:
+        print("Usage (%)".ljust(15)),
+        print((str(UsedP_CPU) + ' %').rjust(11)),
+    print '|'.center(2),
 
-    string_left_sort("Usage (%)",15,0)
-    UsedP_SWAP = str(round(psutil.swap_memory().percent)) + '%'
-    string_right_sort(UsedP_SWAP,10,0)
-    string_center_sort('|', 4, 0)
 
-    print
+    if UsedP_MEM > MEM_CRITICAL_THRESHOLD:
+        print(Back.RED + Fore.WHITE  + "Usage (%)".ljust(15)),
+        print((str(UsedP_MEM) + ' %').rjust(12)),
+        print(Back.RESET + Fore.RESET),
+    elif UsedP_MEM > MEM_WARNING_THRESHOLD:
+        print(Back.YELLOW + Fore.WHITE + "Usage (%)".ljust(15)),
+        print((str(UsedP_MEM) + ' %').rjust(12)),
+        print(Back.RESET + Fore.RESET),
+    else:
+        print("Usage (%)".ljust(15)),
+        print((str(UsedP_MEM) + ' %').rjust(12)),
+    print '|'.center(2),
+
+    print "Usage (%)".ljust(15),
+    print (str(Used_SWAP) + ' %').rjust(12),
+    print '|'.center(2)
+
+    print "  Process Information  ".center(122, '-')
 
 if __name__ == "__main__":
+
+    # get the System Current Information
     uptime = commands.getoutput('uptime')
     cpuAvg = uptime.split()[8][:-1]
     cpuSpeed = commands.getoutput('cat /proc/cpuinfo  | grep -i "model name" | tail -1').split(':')[1]
+    Used_SWAP = str(round(float(psutil.swap_memory().used) / 1024 / 1024 / 1024,1))
+    Total_SWAP = str(round(float(psutil.swap_memory().total)/1024/1024/1024,1))
+    UsedP_CPU = round(psutil.cpu_percent())
+    UsedP_MEM = round(psutil.virtual_memory().percent)
+    Used_MEM = str(round(float(psutil.virtual_memory().used) / 1024 / 1024 / 1024))
+    UsedP_SWAP = round(psutil.swap_memory().percent)
+
 
     print_systemInfo()
